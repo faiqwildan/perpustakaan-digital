@@ -7,9 +7,8 @@ import { MdVisibility, MdVisibilityOff, MdLock, MdBadge, MdArrowBack, MdMenuBook
 
 /* ── URL helper logo sekolah ── */
 const logoUrl = (logo) => {
-  if (!logo) return null;
-  if (logo === 'logo_mts.png') return '/logo_mts.png';
-  return `/uploads/logos/${logo}`;
+  if (!logo) return '/logo_mts.png';
+  return logo;
 };
 
 const Login = () => {

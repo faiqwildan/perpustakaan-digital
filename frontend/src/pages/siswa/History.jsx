@@ -31,6 +31,18 @@ const History = () => {
       .finally(() => setLoading(false));
   }, [page]);
 
+  const coverSrc = (cover) => {
+  if (!cover) return null;
+
+  // URL Supabase
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+
+  // fallback lokal lama
+  return `/uploads/covers/${cover}`;
+};
+  
   return (
     <div style={{ maxWidth:860, margin:'0 auto', padding:'20px 16px' }} className="page-fade">
       {/* Header */}
@@ -88,7 +100,7 @@ const History = () => {
                       justifyContent:'center'
                     }}>
                     {book.cover_image
-                      ? <img src={`/uploads/covers/${book.cover_image}`} alt={book.judul}
+                      ? <img src={coverSrc(book.cover_image)} alt={book.judul}
                           style={{ width:'100%', height:'100%', objectFit:'cover' }}
                           onError={e => e.target.style.display='none'} />
                       : <span style={{ fontSize:20 }}>📖</span>}

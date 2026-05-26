@@ -54,7 +54,7 @@ router.post('/login', async (req, res) => {
     // Log login dengan school_id
     try {
       await db.query(
-        'INSERT INTO activity_logs (user_id, school_id, action, detail, ip_address)',
+        'INSERT INTO activity_logs (user_id, school_id, action, detail, ip_address) VALUES (?,?,?,?,?)',
         [user.id, user.school_id, 'login', `${user.nama} login`, req.ip]
       );
     } catch (err) {

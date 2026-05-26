@@ -14,7 +14,17 @@ import api from '../api/axios';
 /* ── URL logo helper ── */
 const logoSrc = (logo) => {
   if (!logo) return '/logo_mts.png';
-  if (logo === 'logo_mts.png') return '/logo_mts.png';
+
+  // kalau URL Supabase
+  if (logo.startsWith('http')) {
+    return logo;
+  }
+
+  // fallback lama
+  if (logo === 'logo_mts.png') {
+    return '/logo_mts.png';
+  }
+
   return `/uploads/logos/${logo}`;
 };
 

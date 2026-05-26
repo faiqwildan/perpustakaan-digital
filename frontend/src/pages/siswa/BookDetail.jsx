@@ -84,6 +84,18 @@ const BookDetail = () => {
 
   const colorIdx = book.id % COLORS.length;
 
+  const coverSrc = (cover) => {
+  if (!cover) return null;
+
+  // URL Supabase
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+
+  // fallback lokal lama
+  return `/uploads/covers/${cover}`;
+};
+  
   return (
     <div style={{ maxWidth:860, margin:'0 auto', padding:'20px 16px' }} className="page-fade">
       <button className="btn btn-outline btn-sm" onClick={() => navigate('/siswa')}
@@ -105,7 +117,7 @@ const BookDetail = () => {
             display:'flex', alignItems:'center', justifyContent:'center',
           }}>
             {book.cover_image
-              ? <img src={`/uploads/covers/${book.cover_image}`} alt={book.judul}
+              ? <img src={coverSrc(book.cover_image)} alt={book.judul}
                   style={{ width:'100%', height:'100%', objectFit:'cover' }}
                   onError={e => e.target.style.display='none'} />
               : <div style={{ textAlign:'center', color:'#fff', padding:20 }}>

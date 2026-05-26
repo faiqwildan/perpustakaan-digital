@@ -205,11 +205,6 @@ router.delete('/:id', verifyToken, adminOnly, async (req, res) => {
       });
     }
 
-    if (existing[0].logo && existing[0].logo !== 'logo_mts.png') {
-      const logoPath = path.join(__dirname, '../uploads/logos', existing[0].logo);
-      if (fs.existsSync(logoPath)) fs.unlinkSync(logoPath);
-    }
-
     await db.query('DELETE FROM schools WHERE id = ?', [req.params.id]);
     res.json({ success: true, message: 'Sekolah berhasil dihapus.' });
   } catch (err) {

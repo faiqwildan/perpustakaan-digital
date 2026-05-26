@@ -33,6 +33,18 @@ const Bookmarks = () => {
     } catch { toast.error('Gagal menghapus bookmark'); }
   };
 
+  const coverSrc = (cover) => {
+  if (!cover) return null;
+
+  // URL Supabase
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+
+  // fallback lokal lama
+  return `/uploads/covers/${cover}`;
+};
+  
   return (
     <div style={{ maxWidth:1000, margin:'0 auto', padding:'20px 16px' }} className="page-fade">
       {/* Header */}
@@ -87,7 +99,7 @@ const Bookmarks = () => {
                 <div className="book-cover"
                   style={{ background: !book.cover_image ? COLORS[colorIdx] : undefined }}>
                   {book.cover_image
-                    ? <img src={`/uploads/covers/${book.cover_image}`} alt={book.judul}
+                    ? <img src={coverSrc(book.cover_image)} alt={book.judul}
                         onError={e => e.target.style.display='none'} />
                     : <div style={{ textAlign:'center', padding:12, color:'rgba(255,255,255,.92)' }}>
                         <div style={{ fontSize:32, marginBottom:7 }}>📖</div>

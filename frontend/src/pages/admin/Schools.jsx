@@ -8,8 +8,18 @@ import {
 } from 'react-icons/md';
 
 const logoSrc = (logo) => {
-  if (!logo) return null;
-  if (logo === 'logo_mts.png') return '/logo_mts.png';
+  if (!logo) return '/logo_mts.png';
+
+  // kalau URL Supabase
+  if (logo.startsWith('http')) {
+    return logo;
+  }
+
+  // fallback lama
+  if (logo === 'logo_mts.png') {
+    return '/logo_mts.png';
+  }
+
   return `/uploads/logos/${logo}`;
 };
 

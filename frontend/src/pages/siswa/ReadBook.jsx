@@ -51,7 +51,19 @@ const ReadBook = () => {
   );
   if (!book) return null;
 
-  const pdfUrl = `/uploads/pdf/${book.file_pdf}`;
+  const pdfSrc = (file) => {
+  if (!file) return '';
+
+  // kalau sudah URL Supabase
+  if (file.startsWith('http')) {
+    return file;
+  }
+
+  // fallback lama local storage
+  return `/uploads/pdf/${file}`;
+};
+
+  const pdfUrl = pdfSrc(book.file_pdf);
 
   const formatAuthor = (penulis) => {
   if (!penulis) return '-';

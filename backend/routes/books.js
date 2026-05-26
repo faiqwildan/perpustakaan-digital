@@ -275,13 +275,7 @@ router.get('/:id/download', verifyToken, async (req, res) => {
     if (rows.length === 0)
       return res.status(404).json({ success: false, message: 'Buku tidak ditemukan.' });
 
-    const book     = rows[0];
-    const filePath = path.join(__dirname, '../uploads/pdf', book.file_pdf);
-
-if (!fs.existsSync(filePath))
-  return res.status(404).json({ success: false, message: 'File PDF tidak ditemukan di server.' });
-    if (!fs.existsSync(filePath))
-      return res.status(404).json({ success: false, message: 'File PDF tidak ditemukan di server.' });
+    const book = rows[0];
 
     // Log download — school_id dari JWT
     await db.query(

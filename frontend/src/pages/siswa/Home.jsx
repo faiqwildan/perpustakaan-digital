@@ -13,13 +13,25 @@ const COLORS = [
   'linear-gradient(135deg,#1a252f,#2c3e50)',
 ];
 
+const coverSrc = (cover) => {
+  if (!cover) return null;
+
+  // URL Supabase
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+
+  // fallback lokal lama
+  return `/uploads/covers/${cover}`;
+};
+
 const BookCard = ({ book, onClick }) => {
   const colorIdx = book.id % COLORS.length;
   return (
     <div className="book-card" onClick={onClick} style={{ animation:'slideUp .3s ease' }}>
       <div className="book-cover" style={{ background: !book.cover_image ? COLORS[colorIdx] : undefined }}>
         {book.cover_image
-          ? <img src={`/uploads/covers/${book.cover_image}`} alt={book.judul}
+          ? <img src={coverSrc(book.cover_image)} alt={book.judul}
               onError={e => e.target.style.display='none'} />
           : <div style={{ textAlign:'center', padding:12, color:'rgba(255,255,255,.92)' }}>
               <div style={{ fontSize:32, marginBottom:7 }}>📖</div>

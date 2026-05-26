@@ -4,20 +4,14 @@ const path    = require('path');
 const fs      = require('fs');
 const multer  = require('multer');
 const db      = require('../config/db');
+const supabase = require('../config/supabase');
 const { verifyToken, adminOnly } = require('../middleware/auth');
 
 // ── Multer untuk logo sekolah ─────────────────────────────────
-const logoStorage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    const dir = path.join(__dirname, '../uploads/logos');
-    if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    cb(null, dir);
-  },
-  filename: (req, file, cb) => {
-    const ext    = path.extname(file.originalname);
-    const unique = `school-${Date.now()}${ext}`;
-    cb(null, unique);
-  }
+const uploadLogo = multer({
+  storage: multer.memoryStorage(),
+  fileFilter: logoFilter,
+  limits: { fileSize: 3 * 1024 * 1024 }
 });
 const logoFilter = (req, file, cb) => {
   const allowed = ['image/jpeg','image/jpg','image/png','image/webp','image/svg+xml'];
@@ -84,7 +78,29 @@ router.post('/', verifyToken, adminOnly, uploadLogo.single('logo'), async (req, 
     if (!nama_sekolah)
       return res.status(400).json({ success: false, message: 'Nama sekolah wajib diisi.' });
 
-    const logo = req.file ? req.file.filename : null;
+    let logo = null;
+
+if (req.file) {
+
+  const fileName =
+    `school-${Date.now()}-${req.file.originalname}`;
+
+  const { error } = await supabase.storage
+    .from('school-logos')
+    .upload(fileName, req.file.buffer, {
+      contentType: req.file.mimetype
+    });
+
+  if (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+
+  logo =
+    `${process.env.SUPABASE_URL}/storage/v1/object/public/school-logos/${fileName}`;
+}
 
     // Sekolah baru TIDAK bisa langsung jadi primary
     const [result] = await db.query(
@@ -122,11 +138,24 @@ router.put('/:id', verifyToken, adminOnly, uploadLogo.single('logo'), async (req
 
     let logo = old.logo;
     if (req.file) {
-      if (old.logo && old.logo !== 'logo_mts.png') {
-        const oldPath = path.join(__dirname, '../uploads/logos', old.logo);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-      }
-      logo = req.file.filename;
+      const fileName =
+  `school-${Date.now()}-${req.file.originalname}`;
+
+const { error } = await supabase.storage
+  .from('school-logos')
+  .upload(fileName, req.file.buffer, {
+    contentType: req.file.mimetype
+  });
+
+if (error) {
+  return res.status(500).json({
+    success: false,
+    message: error.message
+  });
+}
+
+logo =
+  `${process.env.SUPABASE_URL}/storage/v1/object/public/school-logos/${fileName}`;
     }
 
     await db.query(

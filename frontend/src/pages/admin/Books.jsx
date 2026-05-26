@@ -23,7 +23,7 @@ const CoverThumb = ({ book, size = 48 }) => {
   if (book.cover_image && !err) {
     return (
       <img
-        src={`/uploads/covers/${book.cover_image}`}
+        src={coverSrc(book.cover_image)}
         alt={book.judul}
         onError={() => setErr(true)}
         style={{ width:size, height:size, objectFit:'cover',
@@ -38,6 +38,26 @@ const CoverThumb = ({ book, size = 48 }) => {
       <MdImage style={{ fontSize:22, color:'#94a3b8' }} />
     </div>
   );
+};
+
+const coverSrc = (cover) => {
+  if (!cover) return null;
+
+  if (cover.startsWith('http')) {
+    return cover;
+  }
+
+  return `/uploads/covers/${cover}`;
+};
+
+const pdfSrc = (file) => {
+  if (!file) return '';
+
+  if (file.startsWith('http')) {
+    return file;
+  }
+
+  return `/uploads/pdf/${file}`;
 };
 
 /* ── Badge status PDF ── */
@@ -59,7 +79,7 @@ const PdfBadge = ({ filename }) => {
         background:'#dcfce7', color:'#166534', padding:'2px 8px', borderRadius:99, fontWeight:600 }}>
         <MdCheckCircle style={{ fontSize:13 }} /> PDF tersedia
       </span>
-      <a href={`/uploads/pdf/${filename}`} target="_blank" rel="noreferrer"
+      <a href={pdfSrc(filename)} target="_blank" rel="noreferrer"
         title={`Preview: ${filename}`}
         style={{ display:'inline-flex', alignItems:'center', color:'var(--primary)',
           fontSize:13, textDecoration:'none' }}
@@ -122,7 +142,7 @@ const Books = () => {
     setForm({ judul:b.judul, penulis:b.penulis, penerbit:b.penerbit||'',
       tahun_terbit:b.tahun_terbit||'', kategori_id:b.kategori_id||'',
       deskripsi:b.deskripsi||'', file_pdf:null, cover_image:null });
-    setCoverPreview(b.cover_image ? `/uploads/covers/${b.cover_image}` : null);
+    setCoverPreview(b.cover_image ? coverSrc(b.cover_image) : null);
     setModal(true);
   };
   const closeModal = () => { setModal(false); setEditing(null); setCoverPreview(null); };

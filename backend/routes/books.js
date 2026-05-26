@@ -1,8 +1,7 @@
 const express = require('express');
 const router  = express.Router();
-const path    = require('path');
-const fs      = require('fs');
 const db      = require('../config/db');
+const supabase = require('../config/supabase');
 const { verifyToken, adminOnly } = require('../middleware/auth');
 const { uploadBookFiles }        = require('../middleware/upload');
 
@@ -116,8 +115,45 @@ router.post('/', verifyToken, adminOnly,
       if (!req.files?.['file_pdf'])
         return res.status(400).json({ success: false, message: 'File PDF wajib diunggah.' });
 
-      const filePdf    = req.files['file_pdf'][0].filename;
-      const coverImage = req.files['cover_image']?.[0]?.filename || null;
+      const pdfFile = req.files['file_pdf'][0];
+
+const pdfName = `${Date.now()}-${pdfFile.originalname}`;
+
+const { error: pdfError } = await supabase.storage
+  .from('books-pdf')
+  .upload(pdfName, pdfFile.buffer, {
+    contentType: pdfFile.mimetype
+  });
+
+if (pdfError) {
+  return res.status(500).json({
+    success: false,
+    message: pdfError.message
+  });
+}
+
+const filePdf =
+  `${process.env.SUPABASE_URL}/storage/v1/object/public/books-pdf/${pdfName}`;
+
+let coverImage = null;
+
+if (req.files?.['cover_image']) {
+
+  const coverFile = req.files['cover_image'][0];
+
+  const coverName = `${Date.now()}-${coverFile.originalname}`;
+
+  const { error: coverError } = await supabase.storage
+    .from('book-covers')
+    .upload(coverName, coverFile.buffer, {
+      contentType: coverFile.mimetype
+    });
+
+  if (!coverError) {
+    coverImage =
+      `${process.env.SUPABASE_URL}/storage/v1/object/public/book-covers/${coverName}`;
+  }
+}
 
       const [result] = await db.query(
         `INSERT INTO books
@@ -150,17 +186,44 @@ router.put('/:id', verifyToken, adminOnly,
       let coverImage = old.cover_image;
 
       if (req.files?.['file_pdf']) {
-        const oldPath = path.join(__dirname, '../uploads/pdf', filePdf);
-        if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        filePdf = req.files['file_pdf'][0].filename;
-      }
+
+  const pdfFile = req.files['file_pdf'][0];
+
+  const pdfName = `${Date.now()}-${pdfFile.originalname}`;
+
+  const { error } = await supabase.storage
+    .from('books-pdf')
+    .upload(pdfName, pdfFile.buffer, {
+      contentType: pdfFile.mimetype
+    });
+
+  if (error) {
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+
+  filePdf =
+    `${process.env.SUPABASE_URL}/storage/v1/object/public/books-pdf/${pdfName}`;
+}
       if (req.files?.['cover_image']) {
-        if (coverImage) {
-          const oldPath = path.join(__dirname, '../uploads/covers', coverImage);
-          if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
-        }
-        coverImage = req.files['cover_image'][0].filename;
-      }
+
+  const coverFile = req.files['cover_image'][0];
+
+  const coverName = `${Date.now()}-${coverFile.originalname}`;
+
+  const { error } = await supabase.storage
+    .from('book-covers')
+    .upload(coverName, coverFile.buffer, {
+      contentType: coverFile.mimetype
+    });
+
+  if (!error) {
+    coverImage =
+      `${process.env.SUPABASE_URL}/storage/v1/object/public/book-covers/${coverName}`;
+  }
+}
 
       const { judul, penulis, penerbit, tahun_terbit, kategori_id, deskripsi } = req.body;
       await db.query(
@@ -214,6 +277,9 @@ router.get('/:id/download', verifyToken, async (req, res) => {
 
     const book     = rows[0];
     const filePath = path.join(__dirname, '../uploads/pdf', book.file_pdf);
+
+if (!fs.existsSync(filePath))
+  return res.status(404).json({ success: false, message: 'File PDF tidak ditemukan di server.' });
     if (!fs.existsSync(filePath))
       return res.status(404).json({ success: false, message: 'File PDF tidak ditemukan di server.' });
 
@@ -225,7 +291,7 @@ router.get('/:id/download', verifyToken, async (req, res) => {
       [userId, schoolId, book.id, 'download', `Download: ${book.judul}`, req.ip]
     );
 
-    res.download(filePath, `${book.judul}.pdf`);
+    res.redirect(book.file_pdf);
   } catch (err) {
     res.status(500).json({ success: false, message: 'Gagal mengunduh buku', error: err.message });
   }

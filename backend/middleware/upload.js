@@ -69,41 +69,39 @@ const uploadCover = multer({
 
 // Upload keduanya sekaligus (untuk form buku)
 const uploadBookFiles = multer({
-  storage: multer.diskStorage({
-    destination: (req, file, cb) => {
-      let dir;
-      if (file.fieldname === 'file_pdf') {
-        dir = path.join(__dirname, '../uploads/pdf');
-      } else {
-        dir = path.join(__dirname, '../uploads/covers');
-      }
-      ensureDir(dir);
-      cb(null, dir);
-    },
-    filename: (req, file, cb) => {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-      const ext = path.extname(file.originalname);
-      const prefix = file.fieldname === 'file_pdf' ? 'book' : 'cover';
-      cb(null, `${prefix}-${uniqueSuffix}${ext}`);
-    }
-  }),
+  storage: multer.memoryStorage(),
+
   fileFilter: (req, file, cb) => {
-    if (file.fieldname === 'file_pdf' && file.mimetype === 'application/pdf') {
-      cb(null, true);
+    if (file.fieldname === 'file_pdf') {
+      if (file.mimetype === 'application/pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Hanya file PDF yang diizinkan'), false);
+      }
+
     } else if (file.fieldname === 'cover_image') {
-      const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+
+      const allowedTypes = [
+        'image/jpeg',
+        'image/jpg',
+        'image/png',
+        'image/webp'
+      ];
+
       if (allowedTypes.includes(file.mimetype)) {
         cb(null, true);
       } else {
         cb(new Error('Format gambar tidak valid'), false);
       }
-    } else if (file.fieldname === 'file_pdf') {
-      cb(new Error('Hanya file PDF yang diizinkan'), false);
+
     } else {
       cb(null, true);
     }
   },
-  limits: { fileSize: 50 * 1024 * 1024 }
+
+  limits: {
+    fileSize: 50 * 1024 * 1024
+  }
 });
 
 module.exports = { uploadPDF, uploadCover, uploadBookFiles };

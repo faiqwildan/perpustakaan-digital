@@ -24,6 +24,13 @@ router.post('/login', async (req, res) => {
     if (rows.length === 0)
       return res.status(401).json({ success: false, message: 'NISN atau password salah.' });
 
+    if (!rows || rows.length === 0) {
+      return res.status(401).json({
+        success: false,
+        message: 'NISN atau password salah'
+      });
+    }
+    
     const user = rows[0];
 
     // Blokir siswa dari sekolah draft (admin tetap bisa login)

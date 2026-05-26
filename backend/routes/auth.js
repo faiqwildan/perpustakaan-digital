@@ -34,6 +34,13 @@ router.post('/login', async (req, res) => {
       });
     }
 
+    if (!user.password) {
+      return res.status(500).json({
+        success: false,
+        message: 'Password tidak ditemukan di database'
+      });
+    }
+    
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch)
       return res.status(401).json({ success: false, message: 'NISN atau password salah.' });
@@ -45,10 +52,14 @@ router.post('/login', async (req, res) => {
     );
 
     // Log login dengan school_id
-    await db.query(
-      'INSERT INTO activity_logs (user_id, school_id, action, detail, ip_address) VALUES (?,?,?,?,?)',
-      [user.id, user.school_id, 'login', `${user.nama} login ke sistem`, req.ip]
-    );
+    try {
+      await db.query(
+        'INSERT INTO activity_logs (user_id, school_id, action, detail, ip_address)',
+        [user.id, user.school_id, 'login', `${user.nama} login`, req.ip]
+      );
+    } catch (err) {
+      console.log("activity_logs error diabaikan:", err.message);
+    }
 
     res.json({
       success: true, message: 'Login berhasil', token,

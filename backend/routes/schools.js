@@ -8,19 +8,23 @@ const supabase = require('../config/supabase');
 const { verifyToken, adminOnly } = require('../middleware/auth');
 
 // ── Multer untuk logo sekolah ─────────────────────────────────
-const uploadLogo = multer({
-  storage: multer.memoryStorage(),
-  fileFilter: logoFilter,
-  limits: { fileSize: 3 * 1024 * 1024 }
-});
+// ── Multer untuk logo sekolah ─────────────────────────────────
 const logoFilter = (req, file, cb) => {
-  const allowed = ['image/jpeg','image/jpg','image/png','image/webp','image/svg+xml'];
+  const allowed = [
+    'image/jpeg',
+    'image/jpg',
+    'image/png',
+    'image/webp',
+    'image/svg+xml'
+  ];
+
   allowed.includes(file.mimetype)
     ? cb(null, true)
     : cb(new Error('Hanya file gambar yang diizinkan'), false);
 };
+
 const uploadLogo = multer({
-  storage: logoStorage,
+  storage: multer.memoryStorage(),
   fileFilter: logoFilter,
   limits: { fileSize: 3 * 1024 * 1024 }
 });

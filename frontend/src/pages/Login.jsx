@@ -83,9 +83,9 @@ const Login = () => {
           {/* ── Kiri: Branding ── */}
           <div style={{ color:'#fff', textAlign:'center', flex:'1 1 280px', maxWidth:360 }}>
             {/* Logo: tampilkan logo sekolah terpilih (atau logo_mts jika single) */}
-            {selectedSchool && !isSingleSchool && logoUrl(selectedSchool.logo) ? (
+            {selectedSchool && !isSingleSchool && logoUrl(selectedSchool?.logo) ? (
               <img
-                src={logoUrl(selectedSchool.logo)}
+                src={logoUrl(selectedSchool?.logo)}
                 alt="Logo"
                 style={{ width:88, marginBottom:16, borderRadius:12 }}
               />
@@ -182,7 +182,7 @@ const Login = () => {
               <>
                 <div style={{ textAlign:'center', marginBottom:22 }}>
                   {logoUrl(selectedSchool?.logo)
-                    ? <img src={logoUrl(selectedSchool.logo)} alt="Logo"
+                    ? <img src={logoUrl(selectedSchool?.logo)} alt="Logo"
                         style={{ width:50, height:50, objectFit:'contain', borderRadius:10, marginBottom:10 }}
                         onError={e => e.target.style.display='none'} />
                     : <img src="/logo_mts.png" alt="Logo" style={{ width:50, marginBottom:10 }} />}

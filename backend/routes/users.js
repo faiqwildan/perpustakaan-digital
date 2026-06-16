@@ -327,7 +327,7 @@ router.get('/template-excel', verifyToken, adminOnly, async (req, res) => {
     res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
     res.setHeader('Content-Disposition', 'attachment; filename=template-import-siswa.xlsx');
     await wb.xlsx.write(res);
-    res.end();
+    return res.end();
   } catch (err) {
     res.status(500).json({ success: false, message: 'Gagal membuat template', error: err.message });
   }

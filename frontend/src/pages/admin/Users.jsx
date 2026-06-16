@@ -169,20 +169,29 @@ const Users = () => {
   };
 
   /* ── import excel ── */
-  const handleDownloadTemplate = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const res   = await fetch('/api/users/template-excel', {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const blob  = await res.blob();
-      const url   = URL.createObjectURL(blob);
-      const a     = document.createElement('a');
-      a.href = url; a.download = 'template-import-siswa.xlsx'; a.click();
-      URL.revokeObjectURL(url);
-    } catch { toast.error('Gagal download template'); }
-  };
+ /* ── download template excel ── */
+const handleDownloadTemplate = async () => {
+  try {
+    const res = await api.get('/users/template-excel', {
+      responseType: 'blob'
+    });
 
+    const url = window.URL.createObjectURL(res.data);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'template-import-siswa.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+
+    window.URL.revokeObjectURL(url);
+
+  } catch (err) {
+    console.error(err);
+    toast.error('Gagal download template');
+  }
+};
   const handleImport = async (ev) => {
     ev.preventDefault();
     if (!importFile) { toast.error('Pilih file Excel terlebih dahulu'); return; }

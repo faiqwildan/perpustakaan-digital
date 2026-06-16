@@ -107,27 +107,37 @@ const Logs = () => {
   const hasFilter = filterAction || filterKelas || startDate || endDate;
 
   /* ── Export Excel ── */
-  const handleExportExcel = async () => {
-    setExporting(true);
-    try {
-      const token = localStorage.getItem('token');
-      const p = buildParams({ page: 1, limit: 99999 });
-      p.append('school_name', encodeURIComponent(activeSchoolName));
-      const res = await fetch(`/api/logs/export/excel?${p}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url;
-      a.download = `laporan-aktivitas-${Date.now()}.xlsx`;
-      a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Export Excel berhasil!');
-    } catch { toast.error('Gagal export Excel'); }
-    finally { setExporting(false); }
-  };
+const handleExportExcel = async () => {
+  setExporting(true);
+
+  try {
+    const p = buildParams({ page: 1, limit: 99999 });
+    p.append('school_name', activeSchoolName);
+
+    const res = await api.get(`/logs/export/excel?${p.toString()}`, {
+      responseType: 'blob'
+    });
+
+    const url = window.URL.createObjectURL(res.data);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `laporan-aktivitas-${Date.now()}.xlsx`;
+
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    window.URL.revokeObjectURL(url);
+
+    toast.success('Export Excel berhasil!');
+  } catch (err) {
+    console.error('Export Excel Error:', err);
+    toast.error('Gagal export Excel');
+  } finally {
+    setExporting(false);
+  }
+};
 
   /* ── Export PDF ── */
   const handleExportPDF = async () => {

@@ -109,6 +109,7 @@ const Books = () => {
   const [deleteId, setDeleteId]     = useState(null);
   const [deleteJudul, setDeleteJudul] = useState('');
   const [coverPreview, setCoverPreview] = useState(null);
+  const [publisherHistory, setPublisherHistory] = useState([]);
   const pdfRef   = useRef();
   const coverRef = useRef();
 
@@ -133,6 +134,15 @@ const Books = () => {
     const t = setTimeout(() => { setPage(1); fetchBooks(); }, 380);
     return () => clearTimeout(t);
   }, [search]);
+    useEffect(() => {
+    api.get('/books/publishers')
+      .then((res) => {
+        setPublisherHistory(res.data.data);
+      })
+      .catch(() => {
+        toast.error('Gagal memuat daftar penerbit');
+      });
+  }, []);
 
   const openAdd = () => {
     setEditing(null); setForm(initialForm); setCoverPreview(null); setModal(true);

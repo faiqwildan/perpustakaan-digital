@@ -309,27 +309,39 @@ router.get('/template-excel', verifyToken, adminOnly, async (req, res) => {
     const ws = wb.addWorksheet('Data Siswa');
 
     ws.columns = [
-      { header: 'Nama Lengkap', key: 'nama',  width: 30 },
+      { header: 'Nama Lengkap', key: 'nama', width: 30 },
       { header: 'NISN (10 digit)', key: 'nisn', width: 20 },
-      { header: 'Kelas',        key: 'kelas', width: 10 },
-      { header: 'Password',     key: 'pass',  width: 20 },
+      { header: 'Kelas', key: 'kelas', width: 10 },
+      { header: 'Password', key: 'pass', width: 20 },
     ];
 
-    ws.getRow(1).eachCell(cell => {
-      cell.font      = { bold: true, color: { argb: 'FFFFFFFF' } };
-      cell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1A5276' } };
-      cell.alignment = { vertical: 'middle', horizontal: 'center' };
+    ws.addRow({
+      nama: 'Ahmad Fauzi',
+      nisn: '1234567890',
+      kelas: '7A',
+      pass: 'password123'
     });
 
-    ws.addRow({ nama: 'Ahmad Fauzi', nisn: '1234567890', kelas: '7A', pass: 'password123' });
-    ws.addRow({ nama: 'Siti Rahayu', nisn: '0987654321', kelas: '8B', pass: 'password123' });
+    const buffer = await wb.xlsx.writeBuffer();
 
-    res.setHeader('Content-Type', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
-    res.setHeader('Content-Disposition', 'attachment; filename=template-import-siswa.xlsx');
-    await wb.xlsx.write(res);
-    return res.end();
+    res.setHeader(
+      'Content-Type',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    );
+
+    res.setHeader(
+      'Content-Disposition',
+      'attachment; filename="template-import-siswa.xlsx"'
+    );
+
+    return res.send(buffer);
+
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Gagal membuat template', error: err.message });
+    console.error(err);
+    res.status(500).json({
+      success:false,
+      message:'Gagal membuat template'
+    });
   }
 });
 

@@ -352,9 +352,22 @@ const Books = () => {
                   </div>
                   <div className="form-group">
                     <label className="form-label">Penerbit</label>
-                    <input className="form-control" value={form.penerbit}
-                      onChange={e=>setForm({...form,penerbit:e.target.value})}
-                      placeholder="Nama penerbit" />
+                    <input
+                      type="text"
+                      list="publisher-list"
+                      className="form-control"
+                      value={form.penerbit}
+                      onChange={(e)=>setForm({...form,penerbit:e.target.value})}
+                  />
+                  
+                  <datalist id="publisher-list">
+                      {publisherHistory.map((publisher) => (
+                          <option
+                              key={publisher}
+                              value={publisher}
+                          />
+                      ))}
+                  </datalist>
                   </div>
                   <div className="form-group">
                     <label className="form-label">Tahun Terbit</label>

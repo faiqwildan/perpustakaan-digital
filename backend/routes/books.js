@@ -46,6 +46,32 @@ router.get('/', verifyToken, async (req, res) => {
   }
 });
 
+// ── GET /api/books/publishers ───────────────────────────────
+router.get('/publishers', verifyToken, async (req, res) => {
+  try {
+    const [rows] = await db.query(`
+      SELECT DISTINCT penerbit
+      FROM books
+      WHERE is_active = 1
+        AND penerbit IS NOT NULL
+        AND penerbit <> ''
+      ORDER BY penerbit ASC
+    `);
+
+    res.json({
+      success: true,
+      data: rows.map(row => row.penerbit)
+    });
+
+  } catch (err) {
+    res.status(500).json({
+      success: false,
+      message: 'Gagal mengambil daftar penerbit',
+      error: err.message
+    });
+  }
+});
+
 // ── GET /api/books/:id ────────────────────────────────────────
 // Tidak log view di sini — log HANYA saat klik "Baca Online"
 router.get('/:id', verifyToken, async (req, res) => {

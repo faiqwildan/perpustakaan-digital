@@ -32,7 +32,9 @@ const validateNISN = (nisn) => {
 const Users = () => {
   const [users, setUsers]               = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [search, setSearch]             = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [filterKelas, setFilterKelas]   = useState('');
   const [page, setPage]                 = useState(1);
   const [pagination, setPagination]     = useState({});
@@ -52,6 +54,31 @@ const Users = () => {
   const [importing, setImporting]       = useState(false);
   const [importResult, setImportResult] = useState(null);
   const importRef = useRef();
+
+  const handleSearch = (e) => {
+  e.preventDefault();
+
+  setSearch(searchInput.trim());
+  setSuggestions([]);
+  setPage(1);
+
+  document.activeElement.blur();
+};
+
+const clearSearch = () => {
+  setSearchInput('');
+  setSearch('');
+  setSuggestions([]);
+  setPage(1);
+};
+
+  useEffect(() => {
+  const close = () => setSuggestions([]);
+
+  window.addEventListener('click', close);
+
+  return () => window.removeEventListener('click', close);
+}, []);
 
   const { schools, isSingleSchool, selectedSchoolId: globalSchoolId } = useSchool();
   useEffect(() => {
@@ -76,9 +103,8 @@ const Users = () => {
 
   useEffect(() => { fetchUsers(); }, [page, filterKelas, globalSchoolId]);
   useEffect(() => {
-    const t = setTimeout(() => { setPage(1); fetchUsers(); }, 380);
-    return () => clearTimeout(t);
-  }, [search]);
+  fetchUsers();
+}, [search]);
 
   /* ── form validation ── */
   const validateForm = () => {
@@ -262,11 +288,77 @@ const handleDownloadTemplate = async () => {
       {/* Filter */}
       <div className="card" style={{ marginBottom:16 }}>
         <div className="card-body" style={{ padding:'12px 14px', display:'flex', gap:10, flexWrap:'wrap' }}>
-          <div className="input-group" style={{ flex:1, minWidth:180 }}>
-            <input className="form-control" placeholder="Cari nama atau NISN..."
-              value={search} onChange={e => setSearch(e.target.value)} />
-            <button className="btn btn-primary"><MdSearch /></button>
-          </div>
+          <form
+    onSubmit={handleSearch}
+    onClick={(e) => e.stopPropagation()}
+    style={{ flex:1, minWidth:180, position:'relative' }}
+>
+    <div className="input-group">
+
+        <input
+            className="form-control"
+            placeholder="Cari nama atau NISN..."
+            value={searchInput}
+            onChange={(e)=>{
+
+                const value = e.target.value;
+
+                setSearchInput(value);
+
+                if(!value.trim()){
+                    setSuggestions([]);
+                    return;
+                }
+
+                const lower = value.toLowerCase();
+
+                const result = users
+                    .filter(u =>
+                        u.nama.toLowerCase().includes(lower) ||
+                        u.nisn.includes(lower)
+                    )
+                    .flatMap(u => [u.nama, u.nisn]);
+
+                setSuggestions([...new Set(result)].slice(0,5));
+
+            }}
+        />
+
+        <button
+            className="btn btn-primary"
+            type={search ? 'button' : 'submit'}
+            onClick={search ? clearSearch : undefined}
+        >
+            {search ? <MdClear /> : <MdSearch />}
+        </button>
+
+    </div>
+
+    {suggestions.length > 0 && (
+        <div className="search-suggestions">
+
+            {suggestions.map((item,index)=>(
+
+                <div
+                    key={index}
+                    className="search-suggestion-item"
+                    onClick={()=>{
+                        setSearchInput(item);
+                        setSearch(item);
+                        setSuggestions([]);
+                        setPage(1);
+                    }}
+                >
+                    <MdSearch size={16}/>
+                    {item}
+                </div>
+
+            ))}
+
+        </div>
+    )}
+
+</form>
           <select className="form-control" style={{ width:140 }}
             value={filterKelas} onChange={e => { setFilterKelas(e.target.value); setPage(1); }}>
             <option value="">Semua Kelas</option>
@@ -282,7 +374,12 @@ const handleDownloadTemplate = async () => {
           )}
           {(search || filterKelas) && (
             <button className="btn btn-outline btn-sm"
-              onClick={() => { setSearch(''); setFilterKelas(''); setPage(1); }}>
+              onClick={() => {
+    setSearch('');
+    setSearchInput('');
+    setFilterKelas('');
+    setPage(1);
+}}>
               <MdClear /> Reset
             </button>
           )}

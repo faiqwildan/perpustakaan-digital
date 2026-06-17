@@ -17,6 +17,33 @@ const TAHUN_LIST = Array.from(
   (_, i) => new Date().getFullYear() - i
 );
 
+const SEARCH_ALIASES = {
+  ipa: 'Ilmu Pengetahuan Alam',
+  ips: 'Ilmu Pengetahuan Sosial',
+  pjok: 'Pendidikan Jasmani, Olahraga, dan Kesehatan',
+  ski: 'Sejarah Kebudayaan Islam',
+  tik: 'Informatika',
+  mtk: 'Matematika',
+  indonesia: 'Bahasa Indonesia',
+  inggris: 'Bahasa Inggris',
+  arab: 'Bahasa Arab',
+
+  pkn: 'Pendidikan Pancasila',
+  ppkn: 'Pendidikan Pancasila',
+
+  quran: 'Al-Qur’an Hadis',
+  hadis: 'Al-Qur’an Hadis',
+
+  akidah: 'Akidah Akhlak',
+  akhlak: 'Akidah Akhlak',
+
+  fikih: 'Fikih',
+  fiqih: 'Fikih',
+
+  coding: 'Koding dan Kecerdasan Artifisial',
+  ai: 'Koding dan Kecerdasan Artifisial',
+};
+
 /* ── Thumbnail cover ── */
 const CoverThumb = ({ book, size = 48 }) => {
   const [err, setErr] = useState(false);
@@ -98,7 +125,9 @@ const Books = () => {
   const [books, setBooks]           = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading]       = useState(true);
-  const [search, setSearch]         = useState('');
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [filterKat, setFilterKat]   = useState('');
   const [page, setPage]             = useState(1);
   const [pagination, setPagination] = useState({});
@@ -112,6 +141,37 @@ const Books = () => {
   const [publisherHistory, setPublisherHistory] = useState([]);
   const pdfRef   = useRef();
   const coverRef = useRef();
+
+  const handleSearch = (e) => {
+  e.preventDefault();
+
+  const keyword = searchInput.trim().toLowerCase();
+
+  const finalSearch =
+    SEARCH_ALIASES[keyword] || searchInput;
+
+  setSearch(finalSearch);
+  setSearchInput(finalSearch);
+  setSuggestions([]);
+  setPage(1);
+
+  document.activeElement.blur();
+};
+
+const clearSearch = () => {
+  setSearchInput('');
+  setSearch('');
+  setSuggestions([]);
+  setPage(1);
+};
+
+  useEffect(() => {
+  const close = () => setSuggestions([]);
+
+  window.addEventListener('click', close);
+
+  return () => window.removeEventListener('click', close);
+}, []);
 
   const fetchBooks = async () => {
     setLoading(true);
@@ -130,10 +190,6 @@ const Books = () => {
     api.get('/categories').then(r => setCategories(r.data.data)).catch(() => {});
   }, []);
   useEffect(() => { fetchBooks(); }, [page, filterKat]);
-  useEffect(() => {
-    const t = setTimeout(() => { setPage(1); fetchBooks(); }, 380);
-    return () => clearTimeout(t);
-  }, [search]);
     useEffect(() => {
     api.get('/books/publishers')
       .then((res) => {
@@ -209,11 +265,81 @@ const Books = () => {
       {/* Filter */}
       <div className="card" style={{ marginBottom:16 }}>
         <div className="card-body" style={{ padding:'12px 14px', display:'flex', gap:10, flexWrap:'wrap' }}>
-          <div className="input-group" style={{ flex:1, minWidth:180 }}>
-            <input className="form-control" placeholder="Cari judul, penulis, penerbit..."
-              value={search} onChange={e => setSearch(e.target.value)} />
-            <button className="btn btn-primary"><MdSearch /></button>
-          </div>
+          <form
+  onSubmit={handleSearch}
+  onClick={(e) => e.stopPropagation()}
+  style={{ flex:1, minWidth:220, position:'relative' }}
+>
+  <div className="input-group">
+    <input
+      className="form-control"
+      placeholder="Cari judul, penulis, penerbit..."
+      value={searchInput}
+      onChange={(e) => {
+        const value = e.target.value;
+
+        setSearchInput(value);
+
+        if (!value.trim()) {
+          setSuggestions([]);
+          return;
+        }
+
+        const lower = value.toLowerCase();
+
+        const aliasSuggestions = Object.entries(SEARCH_ALIASES)
+          .filter(([key, val]) =>
+            key.includes(lower) ||
+            val.toLowerCase().includes(lower)
+          )
+          .map(([_, val]) => val);
+
+        const titleSuggestions = books
+          .filter(book =>
+            book.judul.toLowerCase().includes(lower) ||
+            book.penulis.toLowerCase().includes(lower) ||
+            (book.penerbit || '').toLowerCase().includes(lower)
+          )
+          .map(book => book.judul);
+
+        const unique = [...new Set([
+          ...aliasSuggestions,
+          ...titleSuggestions
+        ])].slice(0, 5);
+
+        setSuggestions(unique);
+      }}
+    />
+
+    <button
+      className="btn btn-primary"
+      type={search ? 'button' : 'submit'}
+      onClick={search ? clearSearch : undefined}
+    >
+      {search ? <MdClear /> : <MdSearch />}
+    </button>
+  </div>
+
+  {suggestions.length > 0 && (
+    <div className="search-suggestions">
+      {suggestions.map((item, idx) => (
+        <div
+          key={idx}
+          className="search-suggestion-item"
+          onClick={() => {
+            setSearchInput(item);
+            setSearch(item);
+            setSuggestions([]);
+            setPage(1);
+          }}
+        >
+          <MdSearch size={16} />
+          {item}
+        </div>
+      ))}
+    </div>
+  )}
+</form>
           <select className="form-control" style={{ width:160 }}
             value={filterKat} onChange={e => { setFilterKat(e.target.value); setPage(1); }}>
             <option value="">Semua Kategori</option>
@@ -221,7 +347,13 @@ const Books = () => {
           </select>
           {(search || filterKat) && (
             <button className="btn btn-outline btn-sm"
-              onClick={() => { setSearch(''); setFilterKat(''); setPage(1); }}>
+              onClick={() => {
+  setSearch('');
+  setSearchInput('');
+  setSuggestions([]);
+  setFilterKat('');
+  setPage(1);
+}}>
               <MdClear /> Reset
             </button>
           )}

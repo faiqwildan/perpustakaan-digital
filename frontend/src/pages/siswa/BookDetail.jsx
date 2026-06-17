@@ -46,23 +46,23 @@ const BookDetail = () => {
   };
 
   const handleDownload = async () => {
-    if (downloading) return;
-    setDownloading(true);
-    try {
-      const token = localStorage.getItem('token');
-      const res   = await fetch(`/api/books/${id}/download`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error();
-      const blob = await res.blob();
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href = url; a.download = `${book.judul}.pdf`; a.click();
-      URL.revokeObjectURL(url);
-      toast.success('Download berhasil!');
-    } catch { toast.error('Gagal mengunduh file PDF'); }
-    finally { setDownloading(false); }
-  };
+  if (downloading) return;
+
+  setDownloading(true);
+
+  try {
+    const res = await api.get(`/books/${id}/download`);
+
+    window.open(res.data.url, '_blank');
+
+    toast.success('Download berhasil!');
+  } catch (err) {
+    console.error(err);
+    toast.error('Gagal mengunduh PDF');
+  } finally {
+    setDownloading(false);
+  }
+};
 
   const handleBookmark = async () => {
     if (bmLoading) return;

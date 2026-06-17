@@ -324,7 +324,7 @@ router.get('/:id/download', verifyToken, async (req, res) => {
 
     res.json({
       success: true,
-      url: book.file_pdf
+      url: `${book.file_pdf}?download=1`
     });
 
   } catch (err) {

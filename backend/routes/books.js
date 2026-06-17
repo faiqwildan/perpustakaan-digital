@@ -291,29 +291,47 @@ router.delete('/:id', verifyToken, adminOnly, async (req, res) => {
 // school_id diambil dari JWT (req.user.school_id), bukan dari body/query.
 router.get('/:id/download', verifyToken, async (req, res) => {
   try {
-    const userId   = req.user.id;
-    const schoolId = req.user.school_id || null;   // ← dari JWT
+    const userId = req.user.id;
+    const schoolId = req.user.school_id || null;
 
     const [rows] = await db.query(
       'SELECT * FROM books WHERE id = ? AND is_active = 1',
       [req.params.id]
     );
-    if (rows.length === 0)
-      return res.status(404).json({ success: false, message: 'Buku tidak ditemukan.' });
+
+    if (!rows.length) {
+      return res.status(404).json({
+        success: false,
+        message: 'Buku tidak ditemukan.'
+      });
+    }
 
     const book = rows[0];
 
-    // Log download — school_id dari JWT
     await db.query(
       `INSERT INTO activity_logs
-         (user_id, school_id, book_id, action, detail, ip_address)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [userId, schoolId, book.id, 'download', `Download: ${book.judul}`, req.ip]
+      (user_id, school_id, book_id, action, detail, ip_address)
+      VALUES (?,?,?,?,?,?)`,
+      [
+        userId,
+        schoolId,
+        book.id,
+        'download',
+        `Download: ${book.judul}`,
+        req.ip
+      ]
     );
 
-    res.redirect(book.file_pdf);
+    res.json({
+      success: true,
+      url: book.file_pdf
+    });
+
   } catch (err) {
-    res.status(500).json({ success: false, message: 'Gagal mengunduh buku', error: err.message });
+    res.status(500).json({
+      success:false,
+      message:'Gagal download'
+    });
   }
 });
 

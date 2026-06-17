@@ -53,14 +53,10 @@ const BookDetail = () => {
   try {
     const res = await api.get(`/books/${id}/download`);
 
-    const link = document.createElement('a');
-    link.href = res.data.url;
-    link.download = `${book.judul}.pdf`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    // Langsung arahkan ke URL download Supabase
+    window.location.href = res.data.url;
 
-    toast.success('Download berhasil!');
+    toast.success('Download dimulai...');
   } catch (err) {
     console.error(err);
     toast.error('Gagal mengunduh PDF');

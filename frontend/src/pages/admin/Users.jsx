@@ -35,6 +35,7 @@ const Users = () => {
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
   const [filterKelas, setFilterKelas]   = useState('');
   const [page, setPage]                 = useState(1);
   const [pagination, setPagination]     = useState({});
@@ -54,6 +55,19 @@ const Users = () => {
   const [importing, setImporting]       = useState(false);
   const [importResult, setImportResult] = useState(null);
   const importRef = useRef();
+
+  const fetchAllUsersForSuggestion = async () => {
+  try {
+    const res = await api.get(`/users?limit=1000`); 
+    setAllUsers(res.data.data);
+  } catch {
+    toast.error('Gagal memuat data suggestion');
+  }
+};
+
+  useEffect(() => {
+  fetchAllUsersForSuggestion();
+}, []);
 
   const handleSearch = (e) => {
   e.preventDefault();
@@ -101,10 +115,9 @@ const clearSearch = () => {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchUsers(); }, [page, filterKelas, globalSchoolId]);
   useEffect(() => {
   fetchUsers();
-}, [search]);
+}, [page, filterKelas, search, globalSchoolId]);
 
   /* ── form validation ── */
   const validateForm = () => {
@@ -312,12 +325,12 @@ const handleDownloadTemplate = async () => {
 
                 const lower = value.toLowerCase();
 
-                const result = users
-                    .filter(u =>
-                        u.nama.toLowerCase().includes(lower) ||
-                        u.nisn.includes(lower)
-                    )
-                    .flatMap(u => [u.nama, u.nisn]);
+                const result = allUsers
+  .filter(u =>
+    u.nama.toLowerCase().includes(lower) ||
+    u.nisn.includes(lower)
+  )
+  .flatMap(u => [u.nama, u.nisn]);
 
                 setSuggestions([...new Set(result)].slice(0,5));
 

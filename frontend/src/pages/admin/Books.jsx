@@ -189,7 +189,9 @@ const clearSearch = () => {
   useEffect(() => {
     api.get('/categories').then(r => setCategories(r.data.data)).catch(() => {});
   }, []);
-  useEffect(() => { fetchBooks(); }, [page, filterKat]);
+  useEffect(() => {
+  fetchBooks();
+}, [page, filterKat, search]);
     useEffect(() => {
     api.get('/books/publishers')
       .then((res) => {

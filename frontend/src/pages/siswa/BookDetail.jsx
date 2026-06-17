@@ -53,7 +53,12 @@ const BookDetail = () => {
   try {
     const res = await api.get(`/books/${id}/download`);
 
-    window.open(res.data.url, '_blank');
+    const link = document.createElement('a');
+    link.href = res.data.url;
+    link.download = `${book.judul}.pdf`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 
     toast.success('Download berhasil!');
   } catch (err) {
